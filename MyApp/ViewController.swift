@@ -25,24 +25,35 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
-//        arView.delegate = self
+        
         arView.session.delegate = self
         
         guard let referenceImages = ARReferenceImage.referenceImages(inGroupNamed: "AR Resources", bundle: nil) else {
             fatalError("Missing expected asset catalog resources.")
         }
         
+        guard ARWorldTrackingConfiguration.isSupported else {
+            fatalError("ARWorldTrackingConfiguration is not supported on this device")
+        }
         let configuration = ARWorldTrackingConfiguration()
         configuration.detectionImages = referenceImages
+        
+        setUpPeopleOcclusion(for: configuration)
+        
         arView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
-        
-//        arView.session.run(
-//            ARWorldTrackingConfiguration(),
-//            options: []
-//        )
-        
+
 //        startQrCodeDetection()
+    }
+    
+    func setUpPeopleOcclusion(for configuration: ARConfiguration) {
+        guard let configuration = configuration as? ARWorldTrackingConfiguration,
+            ARWorldTrackingConfiguration.supportsFrameSemantics(.personSegmentationWithDepth) else
+        {
+            print("PersonSegmentationWithDepth is not available on this device")
+            return
+        }
+        configuration.frameSemantics.insert(.personSegmentationWithDepth)
+        print("PeopleOcclusion ON")
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -52,26 +63,16 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
     
     func session(_ session: ARSession, didAdd anchors: [ARAnchor]) {
         if let imageAnchor = anchors.first(where: { $0 is ARImageAnchor }) {
-            print("didAdd +++++++++++ --")
             let anchor = try! Experience.loadBox()
-//            print(anchor.keg)
-            for i in anchor.keg!.children {
-                print("child:")
-                print(i.children)
-                
-            }
-//            anchor.reanchor(.world(transform: imageAnchor.transform))
+            
             arView.scene.addAnchor(anchor)
             anchor.reanchor(
                 .world(transform: imageAnchor.transform),
                 preservingWorldTransform: false
             )
             
-            
             let text = MeshResource.generateText(
-                "hello!"
-//            )
-                ,
+                "hello!",
                 extrusionDepth: 0.1,
                 font: .systemFont(ofSize: 0.1),
                 containerFrame: CGRect.zero,
