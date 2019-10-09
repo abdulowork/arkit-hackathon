@@ -15,9 +15,9 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
 
     let arView = ARView(frame: .zero)
     
-     var qrRequests = [VNRequest]()
-     var detectedDataAnchor: ARAnchor?
-     var processing = false
+    var qrRequests = [VNRequest]()
+    var detectedDataAnchor: ARAnchor?
+    var processing = false
     var blueView: UIView!
 
     override func loadView() {
@@ -26,6 +26,11 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        blueView = UIView()
+        blueView.backgroundColor = .red
+        blueView.layer.cornerRadius = 5
+        
         
         arView.session.delegate = self
         
@@ -40,9 +45,10 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
         configuration.detectionImages = referenceImages
         
 //        setUpPeopleOcclusion(for: configuration)
-        
+        arView.autoresizesSubviews = false
+        arView.translatesAutoresizingMaskIntoConstraints = false
         arView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
-//        arView.session.worl
+//        arView.session.
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -52,42 +58,60 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-//        let imageView = UIImageView(image: #imageLiteral(resourceName: "Снимок экрана 2019-10-04 в 20.26.50"))
-//        imageView.contentMode = .scaleAspectFit
-//        imageView.alpha = 0.35
-//        arView.addSubview(imageView)
-//        imageView.frame = arView.bounds
+        let imageView = UIImageView(image: #imageLiteral(resourceName: "Снимок экрана 2019-10-04 в 20.26.50"))
+        imageView.alpha = 0.35
+        arView.addSubview(imageView)
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        
+        imageView.widthAnchor.constraint(equalTo: arView.widthAnchor).isActive = true
+        imageView.centerYAnchor.constraint(equalTo: arView.centerYAnchor).isActive = true
+        imageView.centerXAnchor.constraint(equalTo: arView.centerXAnchor).isActive = true
+        imageView.heightAnchor.constraint(equalTo: arView.widthAnchor, multiplier: 1.7074).isActive = true
+        imageView.addSubview(blueView)
 //
-//        imageView.addSubview(blueView)
-//        blueView = UIView()
-//        blueView
-//        blueView.layer.cornerRadius = 5
+//
+    }
+    
+    func session(_ session: ARSession, didUpdate frame: ARFrame) {
+//        print("\(Int(position.x)), \(Int(position.y)), \(Int(position.z)), \(Int(position.w))")
+//
+        var cgframe = CGRect(x: 111.664611, y: 482.9593, width: 10, height: 10)
+        cgframe.origin.x += CGFloat(10.869565 * frame.camera.transform.columns.3.x)
+        cgframe.origin.y += CGFloat(10.869565 * frame.camera.transform.columns.3.z)
+//        print("x: \(Int(frame.camera.transform.columns.3.x)), y: \(Int(frame.camera.transform.columns.3.y)), z: \(frame.camera.transform.columns.3.z), w: \(frame.camera.transform.columns.3.w)")
+        blueView.frame = cgframe
     }
     
     func session(_ session: ARSession, didAdd anchors: [ARAnchor]) {
         if let imageAnchor = anchors.first(where: { $0 is ARImageAnchor }) {
-            
-            [1.47, 3.82, 5.72, 6.97].forEach {
-                let anchor = try! Experience.loadBox()
-
-                arView.scene.addAnchor(anchor)
-                anchor.reanchor(.world(transform: imageAnchor.transform),preservingWorldTransform: false)
-
-                let text = MeshResource.generateText(
-                    "\($0)",
-                    extrusionDepth: 0.1,
-                    font: .systemFont(ofSize: 0.1),
-                    containerFrame: CGRect.zero,
-                    alignment: .left,
-                    lineBreakMode: .byTruncatingTail
-                )
-
-                anchor.keg!.children[0].children[0].components[ModelComponent.self]?.mesh = text
-
-                let position: SIMD3<Float> = anchor.position
-                //-13.37
-                anchor.setPosition(position + SIMD3<Float>(0.87, 1.5, -Float($0) - 0.3), relativeTo: nil)
-            }
+            session.setWorldOrigin(relativeTransform: imageAnchor.transform)
+//            let source = DispatchSource.makeTimerSource()
+//            source.setEventHandler {
+//
+//            }
+//            source.schedule(deadline: .now() + 1, repeating: 1)
+//            source.resume()
+//            [1.47, 3.82, 5.72, 6.97].forEach {
+//                let anchor = try! Experience.loadBox()
+//
+//                arView.scene.addAnchor(anchor)
+//                anchor.reanchor(.world(transform: imageAnchor.transform),preservingWorldTransform: false)
+//
+//                let text = MeshResource.generateText(
+//                    "\($0)",
+//                    extrusionDepth: 0.1,
+//                    font: .systemFont(ofSize: 0.1),
+//                    containerFrame: CGRect.zero,
+//                    alignment: .left,
+//                    lineBreakMode: .byTruncatingTail
+//                )
+//
+//                anchor.keg!.children[0].children[0].components[ModelComponent.self]?.mesh = text
+//
+//                let position: SIMD3<Float> = anchor.position
+//                //-13.37
+//                anchor.setPosition(position + SIMD3<Float>(0.87, 1.5, -Float($0) - 0.3), relativeTo: nil)
+//            }
             
 //            let orientation: simd_quatf = anchor.orientation
 //            anchor.setOrientation(orientation + simd_quatf(angle: 0.5, axis: orientation.axis), relativeTo: nil)
